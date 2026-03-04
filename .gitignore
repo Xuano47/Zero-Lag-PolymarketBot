@@ -11,6 +11,7 @@ dashboard/*.log
 .env
 .env.backup
 .env.*
+!.env.example
 
 # Data
 data/*
