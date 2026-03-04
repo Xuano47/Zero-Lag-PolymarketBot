@@ -73,9 +73,10 @@ polymarket-rust/
    在 `polymarket-rust` 根目录下配置 `.env` 文件。程序会自动加载。请确保定义了以下关键参数：
 
    > [!NOTE]
-   > **关于地址获取的说明 (仅针对邮箱登录用户):**
-   > *   **WALLET_ADDRESS**: 点击右上角头像 -> 齿轮图标 -> "Private Key" -> "Start Export"。在弹出的提示文字（包含 "Before you continue" 和 "By revealing the private key for"）下方第一行即为你的钱包地址。导出私钥后请务必妥善保存。
-   > *   **FUNDER_ADDRESS**: 点击头像 -> 齿轮图标 -> "Developer Mode" (开发者模式) 即可获取。
+   > **关于地址获取的说明 (针对邮箱登录用户):**
+   > *注：自述文件作者仅使用过邮箱登录方式操作 Polymarket。*
+   > *   **WALLET_ADDRESS**: 点击右上角自己的头像 -> 点击头像旁边的 **齿轮图标** -> 点击 "Private Key (私钥)" -> 点击 "Start Export (开始导出)"。会出现一段文字："Before you continue" 和 "By revealing the private key for"，这段文字下面一行就是你的 **WALLET_ADDRESS**。随后导出私钥时请务必妥善保存。
+   > *   **FUNDER_ADDRESS**: 点击头像 -> 点击 **齿轮图标** -> 点击 "Developer Mode (开发者模式)" 即可获取。
 
    ```env
    # API 与 身份认证

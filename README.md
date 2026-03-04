@@ -71,8 +71,9 @@ polymarket-rust/
 
    > [!NOTE]
    > **How to obtain addresses (For Email Login users):**
-   > *   **WALLET_ADDRESS**: Click your profile (top right) -> Gear icon -> "Private Key" -> "Start Export". The address is located on the first line below the warning text (starting with "Before you continue"). Please keep your exported private key strictly confidential.
-   > *   **FUNDER_ADDRESS**: Click your profile -> Gear icon -> "Developer Mode" to obtain it.
+   > *Note: The author has only used the email login method for Polymarket.*
+   > *   **WALLET_ADDRESS**: Click your profile icon (top right) -> click the **Gear icon** next to your profile -> click "Private Key" -> click "Start Export". A message will appear: "Before you continue" and "By revealing the private key for". The line immediately below this text is your **WALLET_ADDRESS**. Please keep your exported private key strictly confidential after this step.
+   > *   **FUNDER_ADDRESS**: Click your profile icon -> click the **Gear icon** -> click "Developer Mode" to obtain it.
 
    ```env
    # API & Auth
