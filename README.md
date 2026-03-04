@@ -85,15 +85,18 @@ polymarket-rust/
    SIGNATURE_TYPE=1                   # 1=EOA Signature, 0=Default
    
    # Trading Strategy Thresholds
-   MIN_PROFIT_THRESHOLD=0.02          # Min profit margin (2%)
+   MIN_PROFIT_THRESHOLD=0.02          # Min profit margin (e.g., 0.02 = 2%)
    MAX_POSITION_SIZE=6                # Max investment per leg (USDC)
-   SLIPPAGE_PADDING=0.0015            # Slippage buffer (ensures FOK fills)
+   SLIPPAGE_PADDING=0.0015            # Slippage buffer (e.g., 0.0015 = 0.15% per leg)
    LIQUIDITY_COEFFICIENT=0.5          # Allow consuming X% of current top depth
    MIN_SHARE_THRESHOLD=5              # Min shares to buy (avoids dust)
    MIN_LIQUIDITY_USD=5000             # Filter markets with liquidity below this
    MAX_LIQUIDITY_USD=50000            # Filter hyper-liquid "red ocean" markets
    MAX_DAYS_UNTIL_RESOLUTION=1        # Filter markets resolving too far in the future
    
+   > [!WARNING]
+   > **Risk Warning**: If both legs consume their full slippage padding (e.g., 0.15% * 2 = 0.3% total slippage) while your `MIN_PROFIT_THRESHOLD` is set to only 0.2% (example), your actual profit could become **negative**. Although the default values (2% profit vs 0.3% total slippage) are safe, please adjust these parameters carefully based on your own risk tolerance and market volatility.
+
    # Special Filters & Performance
    EXCLUDE_CRYPTO_MINUTES=true       # Automatically skip fast-trap BTC/ETH markets
    NUM_WS_CONNECTIONS=4               # Concurrent WebSocket connections for all markets
@@ -174,6 +177,17 @@ When you see `YES:xxx|NO:xxx` in the logs, use this table to assess status:
 | **`QUERY_ERR\|QUERY_ERR`** | 🟡 **Note** | **Unknown Status**. Usually network jitter. Likely no fill, but check balance to confirm. |
 | **`FILLED\|REJECTED`** | 🔴 **Risk** | **Single-leg fill!** One side filled, the other failed. Manually hedge immediately. |
 | **`FILLED\|QUERY_ERR`** | 💀 **Critical** | **Suspected single-leg!** Highly dangerous; verify your positions on the website immediately. |
+
+## Python Golden Standard (`py_signer.py`)
+
+This script is a reference implementation of the Polymarket EIP-712 signing logic using the official Python `eth-account` SDK.
+
+- **Purpose**: It serves as the "Golden Standard" to ensure the Rust-based signer (`src/signer/mod.rs`) is bit-perfect. Any mismatch in signature generation would lead to `INVALID_SIGNATURE` errors from the exchange.
+- **Usage**:
+  1. Install dependencies: `pip install eth-account`
+  2. Run the script: `python py_signer.py`
+  3. The output provides the canonical EIP-712 hash and signature for a test order.
+  4. Compare this output with the results in the Rust unit test `test_python_golden_standard` to verify your implementation.
 
 > [!TIP]
 > As long as one side is `FILLED` and the other **is not** `FILLED`, a single-leg risk exists. If both are `QUERY_ERR` or `REJECTED`, you are generally safe.

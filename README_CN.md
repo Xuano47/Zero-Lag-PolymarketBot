@@ -88,15 +88,18 @@ polymarket-rust/
    SIGNATURE_TYPE=1                   # 1=EOA 签名, 0=默认
    
    # 交易策略阈值
-   MIN_PROFIT_THRESHOLD=0.02          # 最小利润率 (2%)
+   MIN_PROFIT_THRESHOLD=0.02          # 最小利润率 (例如 0.02 代表 2%)
    MAX_POSITION_SIZE=6                # 单腿最大投资额 (USDC)
-   SLIPPAGE_PADDING=0.0015            # 价格滑点补偿 (确保 FOK 成交)
+   SLIPPAGE_PADDING=0.0015            # 价格滑点补偿 (例如 0.0015 代表单边 0.15%)
    LIQUIDITY_COEFFICIENT=0.5          # 允许吃掉的当前盘口深度比例 (0~1.0)
    MIN_SHARE_THRESHOLD=5              # 最少购买份额 (规避交易意义不大的小碎单)
    MIN_LIQUIDITY_USD=5000             # 过滤全场流动性(Liquidity)低于此值的市场
    MAX_LIQUIDITY_USD=50000            # 过滤超大型、竞争过于激烈的市场 (上限)
    MAX_DAYS_UNTIL_RESOLUTION=1        # 过滤距离结算时间超过此天数的市场
    
+   > [!WARNING]
+   > **风险提示**：请务必注意，如果两边的价格滑点补偿都吃满（例如单边 0.15%，双边合计约 0.3%），而你的 `MIN_PROFIT_THRESHOLD` 设置得过低（如低于 0.3%），最终结算可能会出现**亏损（负利润）**。虽然默认参数（2% 利润 vs 0.3% 总滑点）是安全的，但请根据个人的风险承受能力和市场波动情况谨慎设置。
+
    # 特殊过滤与性能
    EXCLUDE_CRYPTO_MINUTES=true       # 自动屏蔽 BTC/ETH 等带有极速陷阱的市场 (true/false)
    NUM_WS_CONNECTIONS=4               # 开启多少个并发 WebSocket 连接来订阅全场价格
@@ -177,6 +180,17 @@ tail -f dashboard/dashboard.log
 | **`QUERY_ERR\|QUERY_ERR`** | 🟡 **注意** | **未知状态**。通常是网络抖动导致没查到结果。大概率没成交，但建议复核持仓。 |
 | **`FILLED\|REJECTED`** | 🔴 **风险** | **单腿成交！** 一侧成交但另一侧失败，需手动平仓或补单。 |
 | **`FILLED\|QUERY_ERR`** | 💀 **高危** | **疑似单腿！** 必须立刻去官网检查持仓，这是最危险的未知状态。 |
+
+## Python 签名基准 (`py_signer.py`)
+
+该文件是使用 Python 官方 `eth-account` SDK 实现的 Polymarket EIP-712 签名逻辑参考实现。
+
+- **用途**：作为“黄金标准（Golden Standard）”，用于确保 Rust 版本的签名器（`src/signer/mod.rs`）在算法上完全准确。签名逻辑中哪怕一个字节的错误（如字段顺序、类型转换）都会导致交易所返回 `INVALID_SIGNATURE` 错误。
+- **使用方法**：
+  1. 安装依赖：`pip install eth-account`
+  2. 运行脚本：`python py_signer.py`
+  3. 脚本会输出一个测试订单的 EIP-712 哈希和最终签名。
+  4. 将此输出与 Rust 单元测试 `test_python_golden_standard` 中的结果进行比对，以验证 Rust 实现的正确性。
 
 > [!TIP]
 > 只要看到一侧是 `FILLED` 而另一侧**不是** `FILLED`，就说明可能存在单腿风险。如果两边都是 `QUERY_ERR` 或 `REJECTED`，通常是安全的。
