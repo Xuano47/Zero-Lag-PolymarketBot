@@ -1,0 +1,30 @@
+# Binary & Build
+target/
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+dashboard/*.log
+
+# Configuration & Secrets
+.env
+.env.backup
+.env.*
+
+# Data
+data/
+*.db
+*.sqlite
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

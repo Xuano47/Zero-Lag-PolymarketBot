@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Polymarket Bot Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f1f5f9; font-family: sans-serif; color: #1e293b; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* 🎯 NO TRUNCATION - ALLOW WRAP */
+        .market-cell { word-break: break-word; white-space: normal; line-height: 1.4; padding: 12px; font-size: 13px; font-weight: 600; }
+        .numerical { font-family: monospace; font-weight: bold; width: 1%; white-space: nowrap; padding: 0 12px; }
+        .portfolio-card { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-[1400px] mx-auto">
+        <div id="risk-banner" class="hidden bg-red-600 text-white p-4 rounded mb-6 text-center font-bold animate-pulse">
+            🚨 CRITICAL: SINGLE-SIDED FILL DETECTED (LEG RISK) 🚨
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-black uppercase tracking-tight">Polymarket Bot v12.5</h1>
+            <div id="last-sync" class="text-[10px] font-bold text-gray-400 bg-white border px-3 py-1 rounded-full uppercase">SYNC: WAITING</div>
+        </div>
+
+        <!-- 💰 Live Portfolio Section -->
+        <div class="mb-10">
+            <h2 class="text-xs font-black uppercase text-gray-500 tracking-widest mb-4">Live Portfolio (Real-Time Holdings)</h2>
+            <div id="portfolio-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card p-12 text-center text-gray-300 italic">Syncing assets...</div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-4 mb-10 text-center">
+            <div class="card p-4"><h3>Markets</h3><p id="market-count" class="text-2xl font-bold">0</p></div>
+            <div class="card p-4"><h3>Updates</h3><p id="update-count" class="text-2xl font-bold text-blue-600">0</p></div>
+            <div class="card p-4"><h3>Alerts</h3><p id="alert-count" class="text-2xl font-bold text-amber-600">0</p></div>
+            <div class="card p-4 bg-emerald-50/50"><h3>Balance</h3><p id="chain-balance" class="text-2xl font-bold text-emerald-700">$0.00</p></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+            <div class="card h-[600px] flex flex-col overflow-hidden">
+                <div class="p-4 border-b font-bold bg-gray-50">Opportunity Radar</div>
+                <div class="overflow-y-auto flex-grow"><table class="w-full text-left"><tbody id="alerts-body" class="divide-y"></tbody></table></div>
+            </div>
+            <div class="card h-[600px] flex flex-col overflow-hidden border-blue-100">
+                <div class="p-4 border-b font-bold bg-blue-50 text-blue-700">Execution Battlelog</div>
+                <div class="overflow-y-auto flex-grow"><table class="w-full text-left"><tbody id="trades-body" class="divide-y"></tbody></table></div>
+            </div>
+            <div class="card h-[600px] flex flex-col overflow-hidden">
+                <div class="p-4 border-b font-bold bg-rose-50 text-rose-700">FOK Rejects & Failures</div>
+                <div class="overflow-y-auto flex-grow"><table class="w-full text-left"><tbody id="misses-body" class="divide-y"></tbody></table></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateData() {
+            try {
+                const s = await (await fetch('/api/stats')).json();
+                document.getElementById('market-count').innerText = s.markets_scanned.toLocaleString();
+                document.getElementById('update-count').innerText = s.price_updates.toLocaleString();
+                document.getElementById('alert-count').innerText = s.arbitrage_alerts.toLocaleString();
+                document.getElementById('chain-balance').innerText = '$' + (s.balance || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('last-sync').innerText = 'LAST SYNC: ' + s.last_sync;
+                if (s.risk_count > 0) document.getElementById('risk-banner').classList.remove('hidden'); else document.getElementById('risk-banner').classList.add('hidden');
+
+                const pf = await (await fetch('/api/portfolio')).json();
+                const pfGrid = document.getElementById('portfolio-grid');
+                if (pf && pf.length > 0) {
+                    pfGrid.innerHTML = pf.map(p => `
+                        <div class="card p-4 portfolio-card">
+                            <div class="text-[10px] font-black text-blue-500 uppercase mb-1">${p.outcome}</div>
+                            <div class="text-xs font-bold text-gray-800 line-clamp-2 h-8 leading-tight mb-2">${p.title}</div>
+                            <div class="text-xl font-black text-gray-900">${parseFloat(p.size).toFixed(2)} <span class="text-[10px] text-gray-400">SHARES</span></div>
+                        </div>
+                    `).join('');
+                } else pfGrid.innerHTML = '<div class="card p-6 col-span-full text-center text-gray-400 font-bold">No active positions.</div>';
+
+                const h = await (await fetch('/api/history')).json();
+                const draw = (id, data, row) => {
+                    document.getElementById(id).innerHTML = (data && data.length) ? data.map(row).join('') : '<tr><td colspan="3" class="p-12 text-center text-gray-300 italic">Waiting...</td></tr>';
+                };
+
+                // No substring, full name rendering
+                draw('alerts-body', h.alerts, d => `<tr><td class="p-3 text-[10px] text-gray-400 numerical">${d.t.split('T')[1].split('.')[0]}</td><td class="market-cell">${d.m}</td><td class="p-3 font-bold text-green-600 numerical">${(d.p*100).toFixed(2)}%</td></tr>`);
+                draw('trades-body', h.trades, d => `<tr class="bg-blue-50/20"><td class="p-3 text-[10px] text-gray-400 numerical">${d.t.split('T')[1].split('.')[0]}</td><td class="market-cell text-blue-900">${d.m} (${d.o})<br><span class="text-[10px] text-blue-400">${d.s.toFixed(2)} shares @ $${d.p.toFixed(3)}</span></td><td class="p-3 font-black numerical text-right">$${d.c.toFixed(2)}</td></tr>`);
+                draw('misses-body', h.misses, d => {
+                    const isBusy = d.r.includes('filled') || d.r.includes('FOK') || d.r.includes('BUSY') || d.r.includes('MATCHED');
+                    const color = isBusy ? 'text-amber-600 bg-amber-50' : 'text-rose-600 bg-rose-50';
+                    return `<tr><td class="p-3 text-[10px] text-gray-400 numerical">${d.t.split('T')[1].split('.')[0]}</td><td class="market-cell text-gray-500">${d.m}</td><td class="p-3"><span class="px-2 py-1 rounded text-[9px] font-black border ${color} uppercase">${d.r}</span></td></tr>`;
+                });
+            } catch(e) {}
+        }
+        setInterval(updateData, 3000); updateData();
+    </script>
+</body>
+</html>
