@@ -1,5 +1,14 @@
 # Polymarket Arbitrage Engine (Rust Version)
 
+> [!TIP]
+> **Open source isn't easy. If this project inspired you or helped you make a profit, feel free to buy me a coffee! ☕**
+> 
+> **Donation Address (BNB Chain):** `0xb5cac4ecb1168053bba4f725b92a423ab48d7018`
+> 
+> ![Donation QR](./donation_qr.png)
+
+---
+
 A high-performance, ultra-low-latency arbitrage sniper bot for Polymarket, written entirely in Rust.
 
 This is a complete ground-up rewrite of the original Go-based engine, designed to eliminate Garbage Collection (GC) pauses and achieve absolute predictability in execution latency. In the millisecond-sensitive world of arbitrage, Rust's memory management ensures that market WebSocket stream processing is free from the latency spikes common in GC-managed languages.
