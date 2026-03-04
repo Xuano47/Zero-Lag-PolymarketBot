@@ -181,6 +181,9 @@ tail -f dashboard/dashboard.log
 | **`FILLED\|REJECTED`** | 🔴 **风险** | **单腿成交！** 一侧成交但另一侧失败，需手动平仓或补单。 |
 | **`FILLED\|QUERY_ERR`** | 💀 **高危** | **疑似单腿！** 必须立刻去官网检查持仓，这是最危险的未知状态。 |
 
+> [!TIP]
+> 只要看到一侧是 `FILLED` 而另一侧**不是** `FILLED`，就说明可能存在单腿风险。如果两边都是 `QUERY_ERR` 或 `REJECTED`，通常是安全的。
+
 ## Python 签名基准 (`py_signer.py`)
 
 该文件是使用 Python 官方 `eth-account` SDK 实现的 Polymarket EIP-712 签名逻辑参考实现。
@@ -191,6 +194,3 @@ tail -f dashboard/dashboard.log
   2. 运行脚本：`python py_signer.py`
   3. 脚本会输出一个测试订单的 EIP-712 哈希和最终签名。
   4. 将此输出与 Rust 单元测试 `test_python_golden_standard` 中的结果进行比对，以验证 Rust 实现的正确性。
-
-> [!TIP]
-> 只要看到一侧是 `FILLED` 而另一侧**不是** `FILLED`，就说明可能存在单腿风险。如果两边都是 `QUERY_ERR` 或 `REJECTED`，通常是安全的。

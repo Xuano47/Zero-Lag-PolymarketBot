@@ -178,6 +178,9 @@ When you see `YES:xxx|NO:xxx` in the logs, use this table to assess status:
 | **`FILLED\|REJECTED`** | 🔴 **Risk** | **Single-leg fill!** One side filled, the other failed. Manually hedge immediately. |
 | **`FILLED\|QUERY_ERR`** | 💀 **Critical** | **Suspected single-leg!** Highly dangerous; verify your positions on the website immediately. |
 
+> [!TIP]
+> As long as one side is `FILLED` and the other **is not** `FILLED`, a single-leg risk exists. If both are `QUERY_ERR` or `REJECTED`, you are generally safe.
+
 ## Python Golden Standard (`py_signer.py`)
 
 This script is a reference implementation of the Polymarket EIP-712 signing logic using the official Python `eth-account` SDK.
@@ -188,6 +191,3 @@ This script is a reference implementation of the Polymarket EIP-712 signing logi
   2. Run the script: `python py_signer.py`
   3. The output provides the canonical EIP-712 hash and signature for a test order.
   4. Compare this output with the results in the Rust unit test `test_python_golden_standard` to verify your implementation.
-
-> [!TIP]
-> As long as one side is `FILLED` and the other **is not** `FILLED`, a single-leg risk exists. If both are `QUERY_ERR` or `REJECTED`, you are generally safe.
