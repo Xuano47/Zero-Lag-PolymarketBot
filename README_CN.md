@@ -71,6 +71,10 @@ polymarket-rust/
    FUNDER_ADDRESS=你的资金源地址 (可选，支持 Proxy 模式)
    SIGNATURE_TYPE=1                   # 1=EOA 签名, 0=默认
    
+   > **如何获取地址 (Magic/邮箱登录用户):**
+   > *   **WALLET_ADDRESS**: 点击右上角个人头像 -> **Developer** 按钮 -> 点击 **Show Private Key** -> **Export Private Key** -> 在弹出的 "Before you continue" 警告下方，找到 "By revealing the private key for" 后面那串以 `0x` 开头的字符。
+   > *   **FUNDER_ADDRESS**: 点击右上角个人头像 -> **Developer** 即可在页面顶部看到。
+   
    # 交易策略阈值
    MIN_PROFIT_THRESHOLD=0.02          # 最小利润率 (2%)
    MAX_POSITION_SIZE=6                # 单腿最大投资额 (USDC)

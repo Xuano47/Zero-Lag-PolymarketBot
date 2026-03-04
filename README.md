@@ -68,6 +68,10 @@ polymarket-rust/
    FUNDER_ADDRESS=your_funder_address (optional, supports Proxy mode)
    SIGNATURE_TYPE=1                   # 1=EOA Signature, 0=Default
    
+   > **How to find your addresses (Magic/Email login users):**
+   > *   **WALLET_ADDRESS**: Click your profile icon (top right) -> **Developer** -> **Show Private Key** -> **Export Private Key** -> Under the "Before you continue" warning, find the address following "By revealing the private key for".
+   > *   **FUNDER_ADDRESS**: Click your profile icon -> **Developer**; the address is displayed at the top.
+   
    # Trading Strategy Thresholds
    MIN_PROFIT_THRESHOLD=0.02          # Min profit margin (2%)
    MAX_POSITION_SIZE=6                # Max investment per leg (USDC)
