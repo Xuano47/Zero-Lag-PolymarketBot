@@ -13,7 +13,8 @@ dashboard/*.log
 .env.*
 
 # Data
-data/
+data/*
+!data/.gitkeep
 *.db
 *.sqlite
 *.db-shm
