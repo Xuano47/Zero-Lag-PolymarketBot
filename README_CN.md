@@ -29,10 +29,20 @@
 
 ## 关键技术成就
 
-*   **零拷贝热路径 (Zero-Clone Hot Path)**：利用 `serde_json` 直接从字节流 (`&[u8]`) 动态解析 WebSocket 市场价格。消息传递采用移动语义 (`tokio::sync::mpsc`)，在关键路径上彻底消除了堆内存分配和内存拷贝。
+*   **零拷贝热路径 (Zero-Clone Hot Path)**：利用 `serde_json` 直接从字节流 (`&[u8]`) 动态解析 WebSocket 市场价格。消息传递采用移动语义 (`tokio::sync::mpsc`)，在关键路径上彻底消除了堆内存分配 and 内存拷贝。
 *   **EIP-712 签名一致性**：严格验证类型化数据哈希和 `secp256k1` ECDSA 签名。生成的哈希和原始签名字节与 Python 官方 `eth-account` SDK 完美匹配，包括特定于 Polygon 的 `v + 27` 恢复位调整。
 *   **可预测的并发模型**：舍弃了 Go 的 `sync.Map` 和指针锁，转而使用高度优化、无锁分片的 `DashMap` 来管理执行锁和冷却时间。分析状态使用 `std::sync::RwLock`，实现极速的并行读取。
 *   **批量订单 FOK 执行**：在进行任何网络操作前，套利的两端 (YES 和 NO) 负载会同步构建完成，随后利用 Polymarket 的 `POST /orders` 批量接口统一发射，最大程度降低单腿成交风险。
+
+## 套利原理
+
+> **数学逻辑**：在二元结局市场（YES/NO）中，两种结局的价格总和在理论上应当等于结算金额（1.00 USDC）。
+> 
+> **获利机会**：当 `Price(YES) + Price(NO) < 1.00`（扣除交易手续费和滑点后）时，即存在套利空间。
+> - **示例**：如果 `YES = $0.48`，`NO = $0.50`，总投入为 `$0.98`。
+> - **结算**：无论结局如何，你手中必有一份头寸价值 `$1.00`，从而锁定 `$0.02` (2%) 的无风险利润。
+> 
+> **机器人的作用**：引擎实时监控 WebSocket 价格流，当发现双边总价低于 `MIN_PROFIT_THRESHOLD` 设定的阈值时，立即发起批量订单同步买入正反两面，捕捉这一瞬时的价差。
 
 ## 项目结构
 
@@ -61,6 +71,12 @@ polymarket-rust/
    ```
 2. **环境变量**:
    在 `polymarket-rust` 根目录下配置 `.env` 文件。程序会自动加载。请确保定义了以下关键参数：
+
+   > [!NOTE]
+   > **关于地址获取的说明 (仅针对邮箱登录用户):**
+   > *   **WALLET_ADDRESS**: 点击右上角头像 -> 齿轮图标 -> "Private Key" -> "Start Export"。在弹出的提示文字（包含 "Before you continue" 和 "By revealing the private key for"）下方第一行即为你的钱包地址。导出私钥后请务必妥善保存。
+   > *   **FUNDER_ADDRESS**: 点击头像 -> 齿轮图标 -> "Developer Mode" (开发者模式) 即可获取。
+
    ```env
    # API 与 身份认证
    POLY_API_KEY=你的_key
@@ -70,10 +86,6 @@ polymarket-rust/
    WALLET_ADDRESS=你的钱包_0x_地址
    FUNDER_ADDRESS=你的资金源地址 (可选，支持 Proxy 模式)
    SIGNATURE_TYPE=1                   # 1=EOA 签名, 0=默认
-   
-   > **如何获取地址 (Magic/邮箱登录用户):**
-   > *   **WALLET_ADDRESS**: 点击右上角个人头像 -> **Developer** 按钮 -> 点击 **Show Private Key** -> **Export Private Key** -> 在弹出的 "Before you continue" 警告下方，找到 "By revealing the private key for" 后面那串以 `0x` 开头的字符。
-   > *   **FUNDER_ADDRESS**: 点击右上角个人头像 -> **Developer** 即可在页面顶部看到。
    
    # 交易策略阈值
    MIN_PROFIT_THRESHOLD=0.02          # 最小利润率 (2%)

@@ -31,6 +31,16 @@ Arbitrage requires extreme execution speed, which is why this software is built 
 *   **Predictable Concurrency Model**: Replaces Go's `sync.Map` and pointer-based locking with highly optimized, lock-sharded `DashMap` for execution locks and cooldowns. Analysis state uses `std::sync::RwLock` for lightning-fast parallel reads.
 *   **Batch Order FOK Execution**: Synchronously builds both legs (YES and NO) payloads before touching the network, then fires them via Polymarket's `POST /orders` batch endpoint to minimize single-leg fill risk.
 
+## Arbitrage Principle
+
+> **Mathematical Logic**: In a binary outcome market (YES/NO), the sum of the prices of both outcomes should theoretically equal the payout amount ($1.00 USDC).
+> 
+> **Opportunity**: If `Price(YES) + Price(NO) < 1.00` (after accounting for exchange fees and slippage), an arbitrage opportunity exists.
+> - **Example**: If `YES = $0.48` and `NO = $0.50`, the total cost is `$0.98`.
+> - **Payout**: Regardless of the outcome, one of your positions will be worth `$1.00`, yielding a `$0.02` (2%) risk-free profit.
+> 
+> **The Bot's Role**: The engine monitors WebSocket price feeds in real-time, detects when the combined price falls below the `MIN_PROFIT_THRESHOLD`, and executes a simultaneous batch order for both outcomes to capture the spread.
+
 ## Project Structure
 
 ```text
@@ -58,6 +68,12 @@ polymarket-rust/
    ```
 2. **Environment Variables**:
    Configure the `.env` file in the `polymarket-rust` root directory. It is loaded automatically. Ensure the following parameters are defined:
+
+   > [!NOTE]
+   > **How to obtain addresses (For Email Login users):**
+   > *   **WALLET_ADDRESS**: Click your profile (top right) -> Gear icon -> "Private Key" -> "Start Export". The address is located on the first line below the warning text (starting with "Before you continue"). Please keep your exported private key strictly confidential.
+   > *   **FUNDER_ADDRESS**: Click your profile -> Gear icon -> "Developer Mode" to obtain it.
+
    ```env
    # API & Auth
    POLY_API_KEY=your_key
@@ -67,10 +83,6 @@ polymarket-rust/
    WALLET_ADDRESS=your_0x_address
    FUNDER_ADDRESS=your_funder_address (optional, supports Proxy mode)
    SIGNATURE_TYPE=1                   # 1=EOA Signature, 0=Default
-   
-   > **How to find your addresses (Magic/Email login users):**
-   > *   **WALLET_ADDRESS**: Click your profile icon (top right) -> **Developer** -> **Show Private Key** -> **Export Private Key** -> Under the "Before you continue" warning, find the address following "By revealing the private key for".
-   > *   **FUNDER_ADDRESS**: Click your profile icon -> **Developer**; the address is displayed at the top.
    
    # Trading Strategy Thresholds
    MIN_PROFIT_THRESHOLD=0.02          # Min profit margin (2%)
